@@ -40,6 +40,8 @@ dependencies:
   fluttertoast: ^8.2.12
   shared_preferences: ^2.5.2
   bootstrap_icons: ^1.11.3
+  get_storage: ^2.1.1
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

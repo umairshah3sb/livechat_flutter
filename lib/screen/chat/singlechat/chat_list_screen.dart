@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:livechat/model/chat_list_model.dart';
+import 'package:livechat/model/user_model.dart';
 import 'package:livechat/screen/auth/login.dart';
 import 'package:livechat/screen/auth/register.dart';
+import 'package:livechat/screen/chat/controller/chat_list_controller.dart';
 import 'package:livechat/screen/chat/singlechat/conversation_screen.dart';
 import 'package:livechat/utils/colors.dart';
+import 'package:livechat/utils/constant.dart';
 import 'package:livechat/utils/helper.dart';
 import 'package:livechat/widget/title_widget.dart';
 
@@ -17,47 +22,61 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
+  ChatListController controller = Get.put(ChatListController());
+
+  @override
+  void initState() {
+    getChatList();
+    super.initState();
+  }
+
+  Future<void> getChatList() async {
+    await controller.getChatList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: white,
       body: SafeArea(
-        child: Container(
-          width: Get.width,
-          height: Get.height,
-          child: Column(
-            children: [
-              ChatHeader(),
-              SearchBar(),
-              gap(h: 15),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: spacOnly(
-                    bottom: 30,
-                  ),
-                  child: Column(
-                    children: List.generate(
-                      15,
-                      (i) {
-                        return InkWell(
-                          onTap: () {
-                            pushRoute(ConversationScreen());
-                          },
-                          child: ChatListItem(),
-                        );
-                      },
+        child: controller.isLoading
+            ? loadingSpinner()
+            : Container(
+                width: Get.width,
+                height: Get.height,
+                child: Column(
+                  children: [
+                    ChatHeader(),
+                    SearchBar(),
+                    gap(h: 15),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: spacOnly(
+                          bottom: 30,
+                        ),
+                        child: Column(
+                          children: controller.chatList.map((chat) {
+                            return InkWell(
+                              onTap: () {
+                                pushRoute(ConversationScreen());
+                              },
+                              child: ChatListItem(chat),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Container ChatListItem() {
+  Container ChatListItem(ChatListModel chat) {
+    print('${user.id}-------------------------------');
+    UserModel recProfile =
+        chat.userId == user.id.toString ? chat.recProfile : chat.userProfile;
     return Container(
       margin: spacing(h: 10, v: 3),
       padding: spacing(h: 10, v: 5),
@@ -78,14 +97,18 @@ class _WelcomePageState extends State<WelcomePage> {
         children: [
           CircleAvatar(
             radius: 20,
-            foregroundImage: AssetImage('assets/img/profile.jpeg'),
+            foregroundImage: NetworkImage(
+              recProfile.avatar != null
+                  ? recProfile.avatar!
+                  : recProfile.profilePhotoUrl!,
+            ),
           ),
           gap(w: 10),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The Code Pie',
+                recProfile.username,
                 style: GoogleFonts.manrope(
                   fontSize: 16,
                   color: black,
@@ -94,14 +117,26 @@ class _WelcomePageState extends State<WelcomePage> {
               ),
               Row(
                 children: [
-                  Icon(
-                    Icons.done,
-                    size: 16,
-                    color: black,
-                  ),
+                  chat.seenTime != null
+                      ? Icon(
+                          Icons.done_all,
+                          size: 16,
+                          color: orange,
+                        )
+                      : chat.receivedTime != null
+                          ? Icon(
+                              Icons.done_all,
+                              size: 16,
+                              color: black,
+                            )
+                          : Icon(
+                              Icons.done,
+                              size: 16,
+                              color: black,
+                            ),
                   gap(w: 5),
                   Text(
-                    'Hi how are you bro?',
+                    chat.message,
                     style: GoogleFonts.manrope(
                       fontSize: 14,
                       color: black,
@@ -114,7 +149,7 @@ class _WelcomePageState extends State<WelcomePage> {
           ),
           Spacer(),
           Text(
-            '12:12 pm',
+            messageSendTime(chat.sendTime),
             style: GoogleFonts.manrope(
               fontSize: 14,
               color: black,

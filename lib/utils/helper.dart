@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:livechat/utils/colors.dart';
 
 pushRoute(Widget screen) {
@@ -99,4 +100,40 @@ List<BoxShadow> glassShadow = [
 
 pop() {
   Navigator.of(Get.context!).pop();
+}
+
+Widget loadingSpinner() {
+  return Center(
+    child: CircularProgressIndicator(
+      color: orange,
+    ),
+  );
+}
+
+String messageSendTime(timeStamp) {
+  DateTime currentTime = DateTime.now();
+  DateTime epochTime = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(timeStamp.toString()) * 1000);
+  Duration difference = currentTime.difference(epochTime);
+  if (difference.inDays == 0) {
+    if (difference.inMinutes > 0 && difference.inMinutes < 60) {
+      return difference.inMinutes < 2
+          ? '${difference.inMinutes}min ago'
+          : '${difference.inMinutes}mins ago';
+    } else if (difference.inHours > 0) {
+      return difference.inHours < 2
+          ? '${difference.inHours}hr ago'
+          : '${difference.inHours}hr ago';
+    }
+    return 'Now';
+  } else if (difference.inDays == 1) {
+    return 'Yesterday';
+  } else {
+    return DateFormat('d MMM y').format(
+      DateTime.fromMillisecondsSinceEpoch(int.parse(
+            timeStamp.toString(),
+          ) *
+          1000),
+    );
+  }
 }
