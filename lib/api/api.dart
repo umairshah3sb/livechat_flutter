@@ -15,4 +15,21 @@ class API {
         });
     return jsonDecode(response.body);
   }
+
+  Future<dynamic> multipartRequest({
+    required String route,
+    required Map<String, String> mapData,
+    required String fileKey,
+    required List<String> paths,
+  }) async {
+    var request =
+        http.MultipartRequest('POST', Uri.parse('${CONFIG.apiURL}$route'));
+    request.fields.addAll(mapData);
+    for (var path in paths) {
+      request.files.add(await http.MultipartFile.fromPath(fileKey, path));
+    }
+    http.StreamedResponse response = await request.send();
+    final result = await response.stream.bytesToString();
+    return jsonDecode(result);
+  }
 }

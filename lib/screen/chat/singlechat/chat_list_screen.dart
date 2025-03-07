@@ -58,7 +58,11 @@ class _WelcomePageState extends State<WelcomePage> {
                           children: controller.chatList.map((chat) {
                             return InkWell(
                               onTap: () {
-                                pushRoute(ConversationScreen());
+                                pushRoute(ConversationScreen(
+                                  userId: chat.userId == user.id.toString()
+                                      ? chat.recId
+                                      : chat.userId,
+                                ));
                               },
                               child: ChatListItem(chat),
                             );

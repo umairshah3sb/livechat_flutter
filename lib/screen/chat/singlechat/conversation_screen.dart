@@ -1,194 +1,255 @@
+import 'package:livechat/model/message_model.dart';
+import 'package:livechat/model/user_model.dart';
+import 'package:livechat/screen/chat/controller/chatController.dart';
+import 'package:livechat/utils/constant.dart';
 import 'package:livechat/utils/exporter.dart';
 
 class ConversationScreen extends StatefulWidget {
-  const ConversationScreen({super.key});
+  String userId;
+  ConversationScreen({
+    Key? key,
+    required this.userId,
+  }) : super(key: key);
 
   @override
   State<ConversationScreen> createState() => _ConversationScreenState();
 }
 
 class _ConversationScreenState extends State<ConversationScreen> {
+  ChatController controller = Get.put(ChatController());
+
+  @override
+  void initState() {
+    getUser();
+    super.initState();
+  }
+
+  Future<void> getUser() async {
+    controller.userId = widget.userId;
+    await controller.getUser();
+    getChat();
+  }
+
+  Future<void> getChat() async {
+    await controller.getChat();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Container(
-          child: Column(
-            children: [
-              Container(
-                padding: spacing(h: 10, v: 5),
-                decoration: BoxDecoration(
-                  color: white,
-                  borderRadius: radiusOnly(
-                    topLeft: 10,
-                    topRight: 10,
-                    bottomLeft: 10,
-                  ),
-                  boxShadow: glassShadow,
-                ),
-                child: Row(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        pop();
-                      },
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        size: 30,
-                        color: black,
-                      ),
-                    ),
-                    gap(w: 10),
-                    CircleAvatar(
-                      radius: 20,
-                      foregroundImage: AssetImage('assets/img/profile.jpeg'),
-                    ),
-                    gap(w: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'The Code Pie',
-                          style: GoogleFonts.manrope(
-                            fontSize: 16,
-                            color: black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          'Online',
-                          style: GoogleFonts.manrope(
-                            fontSize: 14,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Spacer(),
-                    Icon(
-                      BootstrapIcons.camera_video,
-                      color: black,
-                      size: 24,
-                    ),
-                    gap(w: 15),
-                    Icon(
-                      Icons.call_outlined,
-                      color: black,
-                      size: 24,
-                    ),
-                    gap(w: 15),
-                    Icon(
-                      Icons.more_vert,
-                      color: black,
-                      size: 24,
-                    ),
-                    gap(w: 15),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  reverse: false,
-                  padding: spacOnly(bottom: 20),
-                  child: Column(
-                    children: List.generate(
-                      15,
-                      (i) {
-                        return i.isEven ? MyMessage() : OtherMessage();
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                margin: spacing(h: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) {
-                            return ChatMediaOption();
-                          },
-                        );
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            width: 1,
+        child: GetBuilder<ChatController>(builder: (chatController) {
+          return chatController.isLoading
+              ? loadingSpinner()
+              : chatController.recProfile == null
+                  ? Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error,
+                            size: 40,
                             color: black,
                           ),
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: glassShadow,
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          size: 30,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        margin: spacing(h: 7),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            width: 1,
-                            color: black,
-                          ),
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: glassShadow,
-                        ),
-                        child: TextFormField(
-                          decoration: InputDecoration(
-                            hintText: 'Type a message',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
+                          gap(w: 10),
+                          Text(
+                            'Error',
+                            style: TextStyle(
                               fontSize: 18,
                               color: black,
                               fontWeight: FontWeight.w700,
                             ),
-                            contentPadding: spacOnly(top: 0, left: 15),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          width: 1,
-                          color: black,
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: glassShadow,
+                    )
+                  : Container(
+                      child: Column(
+                        children: [
+                          chatBar(chatController.recProfile!),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              reverse: false,
+                              padding: spacOnly(bottom: 20),
+                              child: Column(
+                                children: chatController.chat.map((chat) {
+                                  return chat.userId == user.id.toString()
+                                      ? MyMessage(chat)
+                                      : OtherMessage(chat);
+                                }).toList(),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            margin: spacing(h: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return ChatMediaOption();
+                                      },
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        width: 1,
+                                        color: black,
+                                      ),
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: glassShadow,
+                                    ),
+                                    child: Icon(
+                                      Icons.add,
+                                      size: 30,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    margin: spacing(h: 7),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                        width: 1,
+                                        color: black,
+                                      ),
+                                      borderRadius: BorderRadius.circular(25),
+                                      boxShadow: glassShadow,
+                                    ),
+                                    child: TextFormField(
+                                      decoration: InputDecoration(
+                                        hintText: 'Type a message',
+                                        border: InputBorder.none,
+                                        hintStyle: TextStyle(
+                                          fontSize: 18,
+                                          color: black,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        contentPadding:
+                                            spacOnly(top: 0, left: 15),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      width: 1,
+                                      color: black,
+                                    ),
+                                    borderRadius: BorderRadius.circular(25),
+                                    boxShadow: glassShadow,
+                                  ),
+                                  child: Icon(
+                                    Icons.send,
+                                    size: 30,
+                                    color: black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          gap(h: 15),
+                        ],
                       ),
-                      child: Icon(
-                        Icons.send,
-                        size: 30,
-                        color: black,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              gap(h: 15),
-            ],
-          ),
-        ),
+                    );
+        }),
       ),
     );
   }
 
-  Widget OtherMessage() {
+  Container chatBar(UserModel recProfile) {
+    return Container(
+      padding: spacing(h: 10, v: 5),
+      decoration: BoxDecoration(
+        color: white,
+        borderRadius: radiusOnly(
+          topLeft: 10,
+          topRight: 10,
+          bottomLeft: 10,
+        ),
+        boxShadow: glassShadow,
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              pop();
+            },
+            child: Icon(
+              Icons.arrow_back_ios,
+              size: 30,
+              color: black,
+            ),
+          ),
+          gap(w: 10),
+          CircleAvatar(
+            radius: 20,
+            foregroundImage: NetworkImage(
+              recProfile.avatar != null
+                  ? recProfile.avatar!
+                  : recProfile.profilePhotoUrl!,
+            ),
+          ),
+          gap(w: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                recProfile.username,
+                style: GoogleFonts.manrope(
+                  fontSize: 16,
+                  color: black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                'Online',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          Spacer(),
+          Icon(
+            BootstrapIcons.camera_video,
+            color: black,
+            size: 24,
+          ),
+          gap(w: 15),
+          Icon(
+            Icons.call_outlined,
+            color: black,
+            size: 24,
+          ),
+          gap(w: 15),
+          Icon(
+            Icons.more_vert,
+            color: black,
+            size: 24,
+          ),
+          gap(w: 15),
+        ],
+      ),
+    );
+  }
+
+  Widget OtherMessage(MessageModel message) {
     return Container(
       width: double.infinity,
       alignment: Alignment.centerLeft,
@@ -215,7 +276,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'The Code Pie',
+                  controller.recProfile!.username,
                   style: GoogleFonts.manrope(
                     fontSize: 15,
                     color: white,
@@ -224,7 +285,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
                 gap(h: 5),
                 Text(
-                  'We cannot solve problems with the kind of thinking we employed when we came up with them',
+                  message.message,
                   style: GoogleFonts.manrope(
                     fontSize: 14,
                     color: white,
@@ -250,7 +311,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  Widget MyMessage() {
+  Widget MyMessage(MessageModel message) {
     return Container(
       width: double.infinity,
       alignment: Alignment.centerRight,
@@ -286,7 +347,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                 ),
                 gap(h: 5),
                 Text(
-                  'We cannot solve problems with the kind of thinking we employed when we came up with them',
+                  message.message,
                   style: GoogleFonts.manrope(
                     fontSize: 14,
                     color: black,
