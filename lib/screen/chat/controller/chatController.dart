@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:livechat/api/api.dart';
 import 'package:livechat/model/message_model.dart';
 import 'package:livechat/model/user_model.dart';
+import 'package:livechat/screen/chat/widget/my_image_message.dart';
+import 'package:livechat/screen/chat/widget/my_text_message.dart';
+import 'package:livechat/screen/chat/widget/other_image_message.dart';
+import 'package:livechat/screen/chat/widget/other_text_message.dart';
 import 'package:livechat/utils/config.dart';
 import 'package:livechat/utils/constant.dart';
 import 'package:livechat/utils/exporter.dart';
@@ -50,5 +54,63 @@ class ChatController extends GetxController {
     }
     isLoading = false;
     update();
+  }
+
+  Future<void> sendMessage({
+    required String recId,
+    String message = '',
+    String latitude = '',
+    String longitude = '',
+    String messageType = '',
+    List<String> files = const [],
+  }) async {
+    List<dynamic> uploadedFiles = [];
+    if (files.isNotEmpty) {
+      final result = await API().multipartRequest(
+        route: CONFIG.uploadFiles,
+        mapData: {
+          'directory': StaticKeys.chatDirectory,
+        },
+        fileKey: 'files[]',
+        paths: files,
+      );
+      if (result != null && result['status'].toString() == '200') {
+        uploadedFiles = result['files'];
+      }
+    }
+
+    await API().postRequest(
+      data: {
+        'message': message,
+        'message_type': messageType,
+        'latitude': latitude,
+        'longitude': longitude,
+        'user_id': user.id,
+        'rec_id': recId,
+        'attachment': uploadedFiles.isNotEmpty ? jsonEncode(uploadedFiles) : '',
+      },
+      route: CONFIG.sendMessageRoute,
+    );
+  }
+
+  Widget MessageWidgetType(MessageModel message) {
+    if (message.userId == user.id.toString()) {
+      if (message.messageType == 'text') {
+        return MyTextMessage(message: message);
+      } else if (message.messageType == 'image') {
+        return MyImageMessage(message: message);
+      } else {
+        return gap();
+      }
+    } else {
+      if (message.messageType == 'text') {
+        return OtherTextMessage(message: message);
+      }
+      if (message.messageType == 'image') {
+        return OtherImageMessage(message: message);
+      } else {
+        return gap();
+      }
+    }
   }
 }

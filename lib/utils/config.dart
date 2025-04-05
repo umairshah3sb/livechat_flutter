@@ -7,4 +7,5 @@ class CONFIG {
   static const String sendMessageRoute = 'chat/send-message';
   static const String chatListRoute = 'chat/get-conversation-list';
   static const String getChatRoute = 'chat/get-chat';
+  static const String uploadFiles = 'chat/upload-files';
 }

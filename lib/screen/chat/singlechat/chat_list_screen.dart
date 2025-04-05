@@ -13,6 +13,7 @@ import 'package:livechat/utils/colors.dart';
 import 'package:livechat/utils/constant.dart';
 import 'package:livechat/utils/helper.dart';
 import 'package:livechat/widget/title_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
   WelcomePage({Key? key}) : super(key: key);
@@ -179,10 +180,17 @@ class _WelcomePageState extends State<WelcomePage> {
             size: 24,
           ),
           gap(w: 10),
-          Icon(
-            Icons.more_vert,
-            color: black,
-            size: 24,
+          InkWell(
+            onTap: () async {
+              final pref = await SharedPreferences.getInstance();
+              await pref.clear();
+              pushRoute(LoginPage());
+            },
+            child: Icon(
+              Icons.more_vert,
+              color: black,
+              size: 24,
+            ),
           ),
           gap(w: 10),
         ],

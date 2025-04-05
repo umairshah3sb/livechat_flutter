@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:livechat/utils/colors.dart';
+import 'package:livechat/utils/config.dart';
 
 pushRoute(Widget screen) {
   Navigator.of(Get.context!).push(
@@ -118,12 +119,12 @@ String messageSendTime(timeStamp) {
   if (difference.inDays == 0) {
     if (difference.inMinutes > 0 && difference.inMinutes < 60) {
       return difference.inMinutes < 2
-          ? '${difference.inMinutes}min ago'
-          : '${difference.inMinutes}mins ago';
+          ? '${difference.inMinutes}m'
+          : '${difference.inMinutes}m';
     } else if (difference.inHours > 0) {
       return difference.inHours < 2
-          ? '${difference.inHours}hr ago'
-          : '${difference.inHours}hr ago';
+          ? '${difference.inHours}h'
+          : '${difference.inHours}h';
     }
     return 'Now';
   } else if (difference.inDays == 1) {
@@ -135,5 +136,13 @@ String messageSendTime(timeStamp) {
           ) *
           1000),
     );
+  }
+}
+
+String getFullLink(String file) {
+  if (file.contains('https')) {
+    return file;
+  } else {
+    return '${CONFIG.domain}${file}';
   }
 }
