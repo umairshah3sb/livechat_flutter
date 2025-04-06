@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:livechat/api/api.dart';
 import 'package:livechat/model/user_model.dart';
 import 'package:livechat/screen/auth/login.dart';
-import 'package:livechat/screen/home/home.dart';
+import 'package:livechat/screen/chat/singlechat/chat_list_screen.dart';
 import 'package:livechat/utils/config.dart';
 import 'package:livechat/utils/constant.dart';
 import 'package:livechat/utils/helper.dart';
